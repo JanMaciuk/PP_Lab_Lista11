@@ -41,15 +41,16 @@ public class ProductionStage extends AbstractBehavior<Resource> {
     /** Production stages that this stage sends finished goods to */
     ActorRef<Resource> nextStage;
 
+    public static Behavior<Resource> create(ProductionType type, ActorRef<Resource> nextStage) {
+        return Behaviors.setup(context -> new ProductionStage(type, context, nextStage));
+    }
 
-
-    public ProductionStage(ProductionType type, int maxJobs, ActorRef<Resource> nextStage) {
-        super();
+    public ProductionStage(ProductionType type,ActorContext<Resource> context,ActorRef<Resource> nextStage) {
+        super(context);
         this.type = type;
         this.inputs = new ArrayList<>();
         this.processing = new ArrayList<>();
         this.outputs = new ArrayList<>();
-        this.maxJobs = maxJobs;
         this.ongoingJobs = new ArrayList<>();
         this.nextStage = nextStage;
         switch (type) {
@@ -60,6 +61,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Meat_raw, 1));
                 this.processingTime = timeModifier;
                 this.successRate = 1;
+                this.maxJobs = 1;
             }
             case Farm -> {
                 this.inputs.add(new Resource(ResourceType.Fertilizer, 1));
@@ -67,6 +69,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Potato_raw, 100));
                 this.processingTime = 10*timeModifier;
                 this.successRate = 0.75;
+                this.maxJobs = 1;
             }
             case PotatoPeeler -> {
                 this.inputs.add(new Resource(ResourceType.Potato_raw, 10));
@@ -74,6 +77,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Potato_peeled, 10));
                 this.processingTime = 2*timeModifier;
                 this.successRate = 0.95;
+                this.maxJobs = 1;
             }
             case PotatoCutter -> {
                 this.inputs.add(new Resource(ResourceType.Potato_peeled, 10));
@@ -81,6 +85,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Potato_cut, 10));
                 this.processingTime = 2*timeModifier;
                 this.successRate = 0.95;
+                this.maxJobs = 1;
             }
             case MeatGrill -> {
                 this.inputs.add(new Resource(ResourceType.Meat_raw, 5));
@@ -88,6 +93,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Meat_fried, 4));
                 this.processingTime = 4*timeModifier;
                 this.successRate = 0.8;
+                this.maxJobs = 1;
             }
             case CanningMachine -> {
                 this.inputs.add(new Resource(ResourceType.Potato_cut, 5));
@@ -97,8 +103,8 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Canned_food, 1));
                 this.processingTime = 5*timeModifier;
                 this.successRate = 0.95;
+                this.maxJobs = 1;
             }
-
         }
     }
 
@@ -108,10 +114,17 @@ public class ProductionStage extends AbstractBehavior<Resource> {
     }
 
     private Behavior<Resource> processResource(Resource receivedResource) {
-        if (receivedResource.type == ResourceType.TimeTick) {
-            doTimeTick();
-            return this;
+        if (this.type == ProductionType.Farm) {
+            System.out.println("Farm processing a resource");
         }
+        if (receivedResource.type == ResourceType.TimeTick) {
+            if (this.type == ProductionType.Farm) {
+                System.out.println("Farm has " + processing.get(0).amount + " fertilizer");
+            }
+            doTimeTick();
+            return Behaviors.same();
+        }
+
 
         boolean validInput = false;
         int inputIndex = 0;
@@ -128,20 +141,24 @@ public class ProductionStage extends AbstractBehavior<Resource> {
         } else {
             throw new IllegalArgumentException("Passed an invalid resource:"+ receivedResource.type + ", to a production stage: " + this.type);
         }
-        return this;
+    return Behaviors.same();
     }
 
     private void doTimeTick( ) {
+        if (this.type == ProductionType.Farm) {
+            System.out.println("Farm doing a time tick");
+        }
         //decrease time left for ongoing jobs
         ongoingJobs.replaceAll(timeLeft -> timeLeft - 1);
 
         //If a job is done, send the output to the next stage:
         ongoingJobs.forEach(integer -> {
             if (integer <= 0) {
-                nextStage.tell(outputs.get(0));
                 if (debugMessagesPrinted) {
-                    System.out.println("Production stage: " + this.type + " sent a resource: " + outputs.get(0).type + " to the next stage.");
+                    System.out.println(this.type + " sent a resource: " + outputs.get(0).type + " to the next stage.");
                 }
+                nextStage.tell(outputs.get(0));
+                ongoingJobs.remove(integer);
             }
         });
 
@@ -152,10 +169,16 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 break;
             }
         }
+        if (this.type == ProductionType.Farm) {
+            System.out.println(ongoingJobs.size() +" jobs underway");
+        }
         if (canStartNewJob && ongoingJobs.size() < maxJobs) {   // If there is enough of all resources, and there is room for a new job.
             ongoingJobs.add(processingTime);                    // Start a new job,
             for (int i = 0; i < inputs.size(); i++) {           // and remove resources used by the job from preprocessing
                 processing.get(i).amount -= inputs.get(i).amount;
+            }
+            if (debugMessagesPrinted) {
+                System.out.println( this.type + " started a new job, " + processing.get(0).amount + " " + processing.get(0).type + " are left.");
             }
         }
     }

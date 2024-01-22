@@ -1,6 +1,8 @@
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.javadsl.Behaviors;
 
 import java.util.ArrayList;
 
@@ -10,7 +12,7 @@ public class Warehouse extends ProductionStage {
     static int shippedAmount = 1;
 
     /** If set, will print all messages sent between actors. */
-    static boolean debugMessagesPrinted = true;
+    static boolean debugMessagesPrinted = false;
 
     /** Production stages that the warehouse sends shipments to*/
     ArrayList<ActorRef<Resource>> shipmentReceivers;
@@ -21,15 +23,15 @@ public class Warehouse extends ProductionStage {
     /** Finished goods received from production*/
     ArrayList<Resource> received;
 
-    public Warehouse(ArrayList<Resource> toBeShipped) {
-        super(ProductionType.Warehouse, 1, null);
+    public static Behavior<Resource> create(ArrayList<Resource> toBeShipped) {
+        return Behaviors.setup(context -> new Warehouse(toBeShipped, context));
+    }
+
+    private Warehouse(ArrayList<Resource> toBeShipped, ActorContext<Resource> context) {
+        super(ProductionType.Warehouse, context, null);
         this.shipmentReceivers = new ArrayList<>();
         this.toBeShipped = toBeShipped;
         this.received = new ArrayList<>();
-    }
-
-    public void setShipmentReceivers(ArrayList<ActorRef<Resource>> shipmentReceivers) {
-        this.shipmentReceivers = shipmentReceivers;
     }
 
     @Override
@@ -38,10 +40,17 @@ public class Warehouse extends ProductionStage {
     }
 
     private Behavior<Resource> send(Resource receivedResource) {
-
-        if (receivedResource.type == ResourceType.TimeTick) {               // If it's a time tick,
-            for (int i = 0; i < shipmentReceivers.size(); i++) {            // send resources to receivers.
+        if (receivedResource.type == ResourceType.WarehouseReceiverList) {
+            this.shipmentReceivers = receivedResource.receivers;
+        } else if (receivedResource.type == ResourceType.TimeTick) {    // If it's a time tick,
+            for (int i = 0; i < shipmentReceivers.size(); i++) {        // send resources to receivers.
+                long amountToShip = Math.max(0, Math.min(toBeShipped.get(i).amount, shippedAmount)); // Check how much to send
+                if (amountToShip == 0) { continue; }                    // Don't ship negative amounts
+                if (debugMessagesPrinted) {
+                    System.out.println("Warehouse sent " + shippedAmount + " " + toBeShipped.get(i).type + " to " + shipmentReceivers.get(i).path().name()+ ", " + toBeShipped.get(i).amount + " were in warehouse");
+                }
                 shipmentReceivers.get(i).tell(new Resource(toBeShipped.get(i).type, shippedAmount));    // Resources are index matched with receivers
+                toBeShipped.get(i).amount -= shippedAmount;                                             // Remove shipped resources from the warehouse
             }
         } else { // add resources to the received list, if they already exist increase the amount
             boolean found = false;

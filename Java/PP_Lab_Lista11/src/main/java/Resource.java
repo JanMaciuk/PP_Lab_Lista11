@@ -1,10 +1,21 @@
+import akka.actor.typed.ActorRef;
+
+import java.util.ArrayList;
+
 public class Resource {
     long amount;
     ResourceType type;
+    ArrayList<ActorRef<Resource>> receivers;
 
     public Resource(ResourceType type, long amount) {
         this.type = type;
         this.amount = amount;
+        receivers = null;
+    }
+    public Resource(ArrayList<ActorRef<Resource>> receivers) {
+        this.type = ResourceType.WarehouseReceiverList;
+        this.amount = 0;
+        this.receivers = receivers;
     }
 }
 
@@ -17,4 +28,5 @@ enum ResourceType {
     Meat_fried,
     Canned_food,
     TimeTick,
+    WarehouseReceiverList
 }
