@@ -66,7 +66,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
             case Farm -> {
                 this.inputs.add(new Resource(ResourceType.Fertilizer, 1));
                 this.processing.add(new Resource(ResourceType.Fertilizer, 0));
-                this.outputs.add(new Resource(ResourceType.Potato_raw, 100));
+                this.outputs.add(new Resource(ResourceType.Potato_raw, 50));
                 this.processingTime = 10*timeModifier;
                 this.successRate = 0.75;
                 this.maxJobs = 1;
@@ -115,10 +115,13 @@ public class ProductionStage extends AbstractBehavior<Resource> {
 
     private Behavior<Resource> processResource(Resource receivedResource) {
         if (receivedResource.type == ResourceType.TimeTick) {
-            doTimeTick();
+            doTimeTick(receivedResource.receivers.get(0));
             return Behaviors.same();
         }
-
+        if (receivedResource.type == ResourceType.PrintResourcesCommand) {
+            printResources();
+            return Behaviors.same();
+        }
 
         boolean validInput = false;
         int inputIndex = 0;
@@ -138,7 +141,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
     return Behaviors.same();
     }
 
-    private void doTimeTick( ) {
+    private void doTimeTick(ActorRef<Resource> spawnerRef) {
         //decrease time left for ongoing jobs
         ongoingJobs.replaceAll(timeLeft -> timeLeft - 1);
 
@@ -153,6 +156,10 @@ public class ProductionStage extends AbstractBehavior<Resource> {
             }
         });
         ongoingJobs.removeIf(integer -> integer <= 0);  // Remove all jobs that are done
+
+        if (!ongoingJobs.isEmpty()) {   // if we are busy, respond with a time tick to the controller
+            spawnerRef.tell(new Resource(getContext().getSelf()));
+        }
 
         boolean canStartNewJob = true;
         for (int i = 0; i < inputs.size(); i++) {
@@ -170,6 +177,16 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 System.out.println( this.type + " started a new job, " + processing.get(0).amount + " " + processing.get(0).type + " are left.");
             }
         }
+    }
+
+    private void printResources() {
+       //Build strig to print:
+        StringBuilder output = new StringBuilder(this.type + " has: ");
+        for (Resource r : processing) {
+            output.append(r.amount).append(" ").append(r.type).append(", ");
+        }
+
+        System.out.println(output);
     }
 
 

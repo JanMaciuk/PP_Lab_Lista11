@@ -12,6 +12,13 @@ public class Resource {
         this.amount = amount;
         receivers = null;
     }
+    public Resource(ActorRef<Resource> selfReference) {
+        this.type = ResourceType.TimeTick;
+        this.amount = 0;
+        this.receivers = new ArrayList<>();
+        this.receivers.add(selfReference);
+    }
+
     public Resource(ArrayList<ActorRef<Resource>> receivers) {
         this.type = ResourceType.WarehouseReceiverList;
         this.amount = 0;
@@ -28,5 +35,6 @@ enum ResourceType {
     Meat_fried,
     Canned_food,
     TimeTick,
-    WarehouseReceiverList
+    WarehouseReceiverList,
+    PrintResourcesCommand
 }

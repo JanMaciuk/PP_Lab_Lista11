@@ -52,6 +52,8 @@ public class Warehouse extends ProductionStage {
                 shipmentReceivers.get(i).tell(new Resource(toBeShipped.get(i).type, shippedAmount));    // Resources are index matched with receivers
                 toBeShipped.get(i).amount -= shippedAmount;                                             // Remove shipped resources from the warehouse
             }
+        } else if (receivedResource.type == ResourceType.PrintResourcesCommand) {
+            printResources();
         } else { // add resources to the received list, if they already exist increase the amount
             boolean found = false;
             for (Resource r : received) {
@@ -66,5 +68,23 @@ public class Warehouse extends ProductionStage {
             }
         }
         return this;
+    }
+    private void printResources() {
+        //Build string to print:
+        StringBuilder sb = new StringBuilder();
+        sb.append("Warehouse resources: ");
+        for (Resource r : received) {
+            sb.append(r.amount);
+            sb.append(" ");
+            sb.append(r.type);
+            sb.append(", ");
+        }
+        for (Resource r : toBeShipped) {
+            sb.append(r.amount);
+            sb.append(" ");
+            sb.append(r.type);
+            sb.append(", ");
+        }
+        System.out.println(sb);
     }
 }

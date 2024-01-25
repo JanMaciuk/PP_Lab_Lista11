@@ -7,6 +7,5 @@ public class Main {
         final ActorSystem<Resource> spawner = ActorSystem.create(ActorSpawner.create(), "spawnerSystem");
         //TODO: implement success probability in all production stages
         //TODO: automatically end the simulation when production is done
-        //TODO: at the end of the simulation, print the amount of resources produced
     }
 }
