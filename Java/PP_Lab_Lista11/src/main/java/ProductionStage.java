@@ -114,13 +114,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
     }
 
     private Behavior<Resource> processResource(Resource receivedResource) {
-        if (this.type == ProductionType.Farm) {
-            System.out.println("Farm processing a resource");
-        }
         if (receivedResource.type == ResourceType.TimeTick) {
-            if (this.type == ProductionType.Farm) {
-                System.out.println("Farm has " + processing.get(0).amount + " fertilizer");
-            }
             doTimeTick();
             return Behaviors.same();
         }
@@ -145,9 +139,6 @@ public class ProductionStage extends AbstractBehavior<Resource> {
     }
 
     private void doTimeTick( ) {
-        if (this.type == ProductionType.Farm) {
-            System.out.println("Farm doing a time tick");
-        }
         //decrease time left for ongoing jobs
         ongoingJobs.replaceAll(timeLeft -> timeLeft - 1);
 
@@ -158,9 +149,10 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                     System.out.println(this.type + " sent a resource: " + outputs.get(0).type + " to the next stage.");
                 }
                 nextStage.tell(outputs.get(0));
-                ongoingJobs.remove(integer);
+                //ongoingJobs.remove(integer);  // This was very bad, no idea why it didn't throw an exception, clearly concurrent modification
             }
         });
+        ongoingJobs.removeIf(integer -> integer <= 0);  // Remove all jobs that are done
 
         boolean canStartNewJob = true;
         for (int i = 0; i < inputs.size(); i++) {
@@ -168,9 +160,6 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 canStartNewJob = false;
                 break;
             }
-        }
-        if (this.type == ProductionType.Farm) {
-            System.out.println(ongoingJobs.size() +" jobs underway");
         }
         if (canStartNewJob && ongoingJobs.size() < maxJobs) {   // If there is enough of all resources, and there is room for a new job.
             ongoingJobs.add(processingTime);                    // Start a new job,

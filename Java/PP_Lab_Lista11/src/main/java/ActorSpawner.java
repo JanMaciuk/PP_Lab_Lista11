@@ -8,7 +8,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import java.util.ArrayList;
 
 public class ActorSpawner extends AbstractBehavior<Resource> {
-    static long simulationLength = 100;    //TODO: automatically end the simulation
+    static long simulationLength = 150;    //TODO: automatically end the simulation
     static long timeUnitMilis = 100;
     public static Behavior<Resource> create() {
         return Behaviors.setup(ActorSpawner::new);
@@ -17,7 +17,7 @@ public class ActorSpawner extends AbstractBehavior<Resource> {
         super(context);
         ArrayList<Resource> startingResources = new ArrayList<>();
         //Set starting resources:
-        startingResources.add(new Resource(ResourceType.Fertilizer, 5));
+        startingResources.add(new Resource(ResourceType.Fertilizer, 2));
         startingResources.add(new Resource(ResourceType.Meat_raw, 20));
         //Warehouse MainWarehouse = new Warehouse(startingResources, context);
         ActorRef<Resource> MainWarehouse = context.spawn(Warehouse.create(startingResources), "MainWarehouse");
