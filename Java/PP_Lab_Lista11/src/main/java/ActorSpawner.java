@@ -8,9 +8,9 @@ import akka.actor.typed.javadsl.ActorContext;
 import java.util.ArrayList;
 
 public class ActorSpawner extends AbstractBehavior<Resource> {
-    static long simulationLength = 100;    //TODO: automatically end the simulation
     static long timeUnitMilis = 100;
-    static boolean allActorsIdle = false;
+    static int actorsMaxIdleWait = 15;
+    static int allActorsIdle = actorsMaxIdleWait;
     private static final ArrayList<ActorRef<Resource>> actors = new ArrayList<>();
     public static Behavior<Resource> create() {
         return Behaviors.setup(ActorSpawner::new);
@@ -40,29 +40,7 @@ public class ActorSpawner extends AbstractBehavior<Resource> {
         actors.add(potatoCutter);
         actors.add(potatoPeeler);
         actors.add(farm);
-        getContext().getSelf().tell(new Resource(getContext().getSelf()));
-
-        //Run the simulation:
-//        while (simulationLength > 0) {
-//            //Send a time tick to every actor:
-//            actors.forEach(actor -> actor.tell(new Resource(getContext().getSelf())));
-//            try {
-//                Thread.sleep(timeUnitMilis);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-
-//            simulationLength--;
-//            System.out.println("Time left: " + simulationLength + " time units");
-//        }
-        //Print the remaining in each stage:
-//        actors.forEach(actor -> actor.tell(new Resource(ResourceType.PrintResourcesCommand, 0)));
-//        try {
-//            Thread.sleep(timeUnitMilis);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        //System.exit(0);
+        getContext().getSelf().tell(new Resource(getContext().getSelf()));  // send first time tick to myself, start the system
 
     }
 
@@ -72,10 +50,17 @@ public class ActorSpawner extends AbstractBehavior<Resource> {
     }
 
     private Behavior<Resource> timeTicked(Resource message) {
-        System.out.println("One unit of time has passed");
 
-        if (message.receivers.get(0) == null) { //detecting if all actors are idle TODO: do this in a much better way
-            if (allActorsIdle) {
+        if (message.receivers.get(0).equals(getContext().getSelf())) { //I send this message to myself
+            allActorsIdle--;    // decrement the idle counter
+            //Send a time tick to every actor:
+            actors.forEach(actor -> actor.tell(new Resource(getContext().getSelf())));
+            try {
+                Thread.sleep(timeUnitMilis);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (allActorsIdle < 0 ) {
                 actors.forEach(actor -> actor.tell(new Resource(ResourceType.PrintResourcesCommand, 0)));
                 try {
                     Thread.sleep(timeUnitMilis);
@@ -84,21 +69,10 @@ public class ActorSpawner extends AbstractBehavior<Resource> {
                 }
                 System.exit(0);
             }
-
-        } else if (message.receivers.get(0).equals(getContext().getSelf())) { //I send this message to myself
-            allActorsIdle = true;
-            //Send a time tick to every actor:
-            actors.forEach(actor -> actor.tell(new Resource(getContext().getSelf())));
-            try {
-                Thread.sleep(timeUnitMilis);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             getContext().getSelf().tell(new Resource(getContext().getSelf()));
-            getContext().getSelf().tell(new Resource((ActorRef<Resource>) null));   // check if all actors are idle TODO: do this in a much better way
-        }
-        else {
-            allActorsIdle = false;  // another actor sent this message to me
+            }
+        else if (allActorsIdle < actorsMaxIdleWait){
+            allActorsIdle++;  // another actor sent this message to me, so it's not idle.
         }
         return this;
     }

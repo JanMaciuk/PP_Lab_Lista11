@@ -151,8 +151,9 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 if (debugMessagesPrinted) {
                     System.out.println(this.type + " sent a resource: " + outputs.get(0).type + " to the next stage.");
                 }
-                nextStage.tell(outputs.get(0));
-                //ongoingJobs.remove(integer);  // This was very bad, no idea why it didn't throw an exception, clearly concurrent modification
+                if (Math.random() < successRate) { // Only send the output if the production was successful
+                    nextStage.tell(outputs.get(0));
+               }
             }
         });
         ongoingJobs.removeIf(integer -> integer <= 0);  // Remove all jobs that are done
