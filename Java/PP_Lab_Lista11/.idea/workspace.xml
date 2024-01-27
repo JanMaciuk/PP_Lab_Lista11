@@ -7,7 +7,6 @@
     <list default="true" id="7969f4c5-3d7c-4e2d-9aa6-72f03d18bbeb" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ActorSpawner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ActorSpawner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ProductionStage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ProductionStage.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -75,6 +74,7 @@
       <workItem from="1705946180676" duration="282000" />
       <workItem from="1706192370282" duration="5139000" />
       <workItem from="1706201270735" duration="1095000" />
+      <workItem from="1706350780496" duration="419000" />
     </task>
     <servers />
   </component>

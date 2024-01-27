@@ -17,17 +17,17 @@ public class ActorSpawner extends AbstractBehavior<Resource> {
     }
     private ActorSpawner(ActorContext<Resource> context) {
         super(context);
-        ArrayList<Resource> startingResources = new ArrayList<>();
         //Set starting resources:
+        ArrayList<Resource> startingResources = new ArrayList<>();
         startingResources.add(new Resource(ResourceType.Fertilizer, 2));
         startingResources.add(new Resource(ResourceType.Meat_raw, 100));
         ActorRef<Resource> MainWarehouse = context.spawn(Warehouse.create(startingResources), "MainWarehouse");
         // Create production stages:
         ActorRef<Resource> canningMachine = context.spawn(ProductionStage.create(ProductionType.CanningMachine, MainWarehouse), "CanningMachine");
-        ActorRef<Resource> meatGrill = context.spawn(ProductionStage.create(ProductionType.MeatGrill, canningMachine), "MeatGrill");
-        ActorRef<Resource> potatoCutter = context.spawn(ProductionStage.create(ProductionType.PotatoCutter, canningMachine), "PotatoCutter");
-        ActorRef<Resource> potatoPeeler = context.spawn(ProductionStage.create(ProductionType.PotatoPeeler, potatoCutter), "PotatoPeeler");
-        ActorRef<Resource> farm = context.spawn(ProductionStage.create(ProductionType.Farm, potatoPeeler), "Farm");
+        ActorRef<Resource> meatGrill      = context.spawn(ProductionStage.create(ProductionType.MeatGrill, canningMachine), "MeatGrill");
+        ActorRef<Resource> potatoCutter   = context.spawn(ProductionStage.create(ProductionType.PotatoCutter, canningMachine), "PotatoCutter");
+        ActorRef<Resource> potatoPeeler   = context.spawn(ProductionStage.create(ProductionType.PotatoPeeler, potatoCutter), "PotatoPeeler");
+        ActorRef<Resource> farm           = context.spawn(ProductionStage.create(ProductionType.Farm, potatoPeeler), "Farm");
         // Set shipment receivers for the warehouse:
         ArrayList<ActorRef<Resource>> warehouseReceivers = new ArrayList<>();
         warehouseReceivers.add(farm);

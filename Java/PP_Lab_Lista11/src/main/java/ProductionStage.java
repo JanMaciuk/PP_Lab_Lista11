@@ -77,7 +77,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Potato_peeled, 10));
                 this.processingTime = 2*timeModifier;
                 this.successRate = 0.95;
-                this.maxJobs = 1;
+                this.maxJobs = 2;
             }
             case PotatoCutter -> {
                 this.inputs.add(new Resource(ResourceType.Potato_peeled, 10));
@@ -85,7 +85,7 @@ public class ProductionStage extends AbstractBehavior<Resource> {
                 this.outputs.add(new Resource(ResourceType.Potato_cut, 10));
                 this.processingTime = 2*timeModifier;
                 this.successRate = 0.95;
-                this.maxJobs = 1;
+                this.maxJobs = 2;
             }
             case MeatGrill -> {
                 this.inputs.add(new Resource(ResourceType.Meat_raw, 5));
