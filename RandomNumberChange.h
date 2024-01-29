@@ -25,10 +25,12 @@ public:
 			{
 				if (Utils::randomBool())
 				{
+					#pragma omp atomic
 					number++;
 				}
 				else
 				{
+					#pragma omp atomic
 					number--;
 				}
 			}
