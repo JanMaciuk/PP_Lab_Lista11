@@ -4,10 +4,15 @@
 
 int main()
 {
-	srand((unsigned int)time(NULL)); // set seed for random number generator
+	//Set seed for random number generator:
+	srand((unsigned int)time(NULL));
+
+	//Run RandomNumberChange and show the final balance:
 	RandomNumberChange rnc;
 	int result = rnc.run(1, 2);
 	std::cout << "RandomNumberChange result: " << result << std::endl;
+
+	//Run the BankingSystem and display status of each account after finish:
 	BankingSystem bs(5, 1000);
 	std::vector<Account> resultBank = bs.run(1);
 	//print number and blance of each account:
